@@ -4,15 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OXO Game</title>
+
   <!-- PWA -->
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#e94560" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="OXO" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+
+  <link rel="stylesheet" href="./style.css" />
 </head>
+
 <body>
   <div class="container">
     <h1>OXO</h1>
@@ -22,6 +25,7 @@
       <button class="mode-btn active" id="btn-pvp" data-mode="pvp">
         👥 <span>2 Players</span>
       </button>
+
       <button class="mode-btn" id="btn-pvc" data-mode="pvc">
         🤖 <span>vs Computer</span>
       </button>
@@ -43,10 +47,12 @@
         <span class="score-label" id="label-x">Player X</span>
         <span class="score-value" id="score-x">0</span>
       </div>
+
       <div class="score-box draws">
         <span class="score-label">Draws</span>
         <span class="score-value" id="score-draw">0</span>
       </div>
+
       <div class="score-box player-o">
         <span class="score-label" id="label-o">Player O</span>
         <span class="score-value" id="score-o">0</span>
@@ -70,8 +76,15 @@
 
     <div class="btn-row">
       <button class="btn" id="restart-btn">New Game</button>
-      <button class="btn secondary" id="reset-scores-btn">Reset Scores</button>
+      <button class="btn secondary" id="reset-scores-btn">
+        Reset Scores
+      </button>
     </div>
+
+    <!-- PWA Install Button -->
+    <button class="install-app-btn" id="installAppBtn" hidden>
+      📲 Install OXO App
+    </button>
   </div>
 
   <!-- Result Overlay -->
@@ -83,12 +96,85 @@
     </div>
   </div>
 
-  <script src="game.js"></script>
+  <script src="./game.js"></script>
+
+  <!-- PWA / Service Worker / Install -->
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    let deferredInstallPrompt = null;
+
+    const installAppBtn = document.getElementById("installAppBtn");
+
+    // Register Service Worker
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("./sw.js")
+          .then(() => {
+            console.log("OXO Service Worker registered successfully.");
+          })
+          .catch((error) => {
+            console.error("OXO Service Worker registration failed:", error);
+          });
       });
+    }
+
+    // Detect when browser makes the app installable
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+
+      deferredInstallPrompt = event;
+
+      // Show our custom install button
+      if (installAppBtn) {
+        installAppBtn.hidden = false;
+      }
+    });
+
+    // Install button clicked
+    if (installAppBtn) {
+      installAppBtn.addEventListener("click", async () => {
+
+        // Browser doesn't provide native installation prompt
+        if (!deferredInstallPrompt) {
+          alert(
+            "To install OXO:\n\n" +
+            "Chrome/Edge: open the browser menu and choose " +
+            "'Install OXO Game' or 'Add to Home screen'."
+          );
+          return;
+        }
+
+        // Show native installation dialog
+        deferredInstallPrompt.prompt();
+
+        const result = await deferredInstallPrompt.userChoice;
+
+        console.log("OXO installation result:", result.outcome);
+
+        deferredInstallPrompt = null;
+        installAppBtn.hidden = true;
+      });
+    }
+
+    // Hide button after successful installation
+    window.addEventListener("appinstalled", () => {
+      console.log("OXO Game installed successfully.");
+
+      deferredInstallPrompt = null;
+
+      if (installAppBtn) {
+        installAppBtn.hidden = true;
+      }
+    });
+
+    // Hide button if already running as installed app
+    if (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    ) {
+      if (installAppBtn) {
+        installAppBtn.hidden = true;
+      }
     }
   </script>
 </body>

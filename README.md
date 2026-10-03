@@ -2,7 +2,7 @@
 
 A classic **Tic-Tac-Toe (OXO)** game built as a **Progressive Web App (PWA)** — playable in browser, installable on desktop & mobile, and works **offline**.
 
-🔗 **[Play Live →](https://YOUR_USERNAME.github.io/oxo-game)**
+🔗 **[Play Live →](https://shamsanthosh123.github.io/oxo-game)**
 
 ---
 

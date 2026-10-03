@@ -82,7 +82,7 @@
     </div>
 
     <!-- PWA Install Button -->
-    <button class="install-app-btn" id="installAppBtn" hidden>
+    <button class="install-app-btn" id="installAppBtn" >
       📲 Install OXO App
     </button>
   </div>
@@ -100,82 +100,77 @@
 
   <!-- PWA / Service Worker / Install -->
   <script>
-    let deferredInstallPrompt = null;
+  let deferredInstallPrompt = null;
 
-    const installAppBtn = document.getElementById("installAppBtn");
+  const installAppBtn = document.getElementById("installAppBtn");
 
-    // Register Service Worker
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("./sw.js")
-          .then(() => {
-            console.log("OXO Service Worker registered successfully.");
-          })
-          .catch((error) => {
-            console.error("OXO Service Worker registration failed:", error);
-          });
-      });
-    }
-
-    // Detect when browser makes the app installable
-    window.addEventListener("beforeinstallprompt", (event) => {
-      event.preventDefault();
-
-      deferredInstallPrompt = event;
-
-      // Show our custom install button
-      if (installAppBtn) {
-        installAppBtn.hidden = false;
-      }
+  // Register Service Worker
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("./sw.js")
+        .then(() => {
+          console.log("OXO Service Worker registered successfully.");
+        })
+        .catch((error) => {
+          console.error("Service Worker registration failed:", error);
+        });
     });
+  }
 
-    // Install button clicked
-    if (installAppBtn) {
-      installAppBtn.addEventListener("click", async () => {
+  // Browser says OXO can be installed
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
 
-        // Browser doesn't provide native installation prompt
-        if (!deferredInstallPrompt) {
-          alert(
-            "To install OXO:\n\n" +
-            "Chrome/Edge: open the browser menu and choose " +
-            "'Install OXO Game' or 'Add to Home screen'."
-          );
-          return;
-        }
+    deferredInstallPrompt = event;
 
-        // Show native installation dialog
-        deferredInstallPrompt.prompt();
+    console.log("OXO installation prompt available.");
+  });
 
-        const result = await deferredInstallPrompt.userChoice;
+  // Install button
+  installAppBtn.addEventListener("click", async () => {
 
-        console.log("OXO installation result:", result.outcome);
+    // Native installation prompt available
+    if (deferredInstallPrompt) {
 
-        deferredInstallPrompt = null;
-        installAppBtn.hidden = true;
-      });
-    }
+      deferredInstallPrompt.prompt();
 
-    // Hide button after successful installation
-    window.addEventListener("appinstalled", () => {
-      console.log("OXO Game installed successfully.");
+      const result = await deferredInstallPrompt.userChoice;
+
+      console.log("OXO installation result:", result.outcome);
 
       deferredInstallPrompt = null;
 
-      if (installAppBtn) {
-        installAppBtn.hidden = true;
-      }
-    });
-
-    // Hide button if already running as installed app
-    if (
-      window.matchMedia("(display-mode: standalone)").matches ||
-      window.navigator.standalone === true
-    ) {
-      if (installAppBtn) {
-        installAppBtn.hidden = true;
-      }
+      return;
     }
-  </script>
-</body>
-</html>
+
+    // Native prompt unavailable
+    alert(
+      "Install OXO Game\n\n" +
+      "Chrome / Edge:\n" +
+      "Open the browser menu (⋮) and choose " +
+      "'Install OXO Game' or 'Install page as app'.\n\n" +
+      "On mobile:\n" +
+      "Use 'Add to Home Screen' or 'Install app'."
+    );
+  });
+
+  // App successfully installed
+  window.addEventListener("appinstalled", () => {
+    console.log("OXO Game installed successfully.");
+
+    deferredInstallPrompt = null;
+
+    installAppBtn.style.display = "none";
+  });
+
+  // If already running as an installed app,
+  // don't show the install button.
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+
+  if (isStandalone) {
+    installAppBtn.style.display = "none";
+  }
+</script>
